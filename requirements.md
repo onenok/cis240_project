@@ -113,5 +113,3 @@ Students may choose two from the following algorithms to solve the TSP:
 | **Performance Evaluation** | Comprehensive evaluation; clear metrics and insightful comparisons. | Good evaluation; some metrics presented. | Basic evaluation; limited metrics. | Incomplete evaluation with unclear metrics. | No evaluation provided. | /4 |
 | **Analysis and Discussion** | Deep analysis of results with clear insights and conclusions. | Good analysis; some insights are provided. | Basic analysis with limited insights. | Minimal analysis with unclear conclusions. | No analysis provided. | /4 |
 | **Report Quality** | Well-structured report; clear and concise writing with no errors. | Report is structured with minor errors. | Some structure; contains multiple errors. | Poor structure; unclear writing with many errors. | No report or illegible. | /4 |
-
-   
