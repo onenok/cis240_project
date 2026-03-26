@@ -22,15 +22,19 @@ class GA:
     def __init__(
         self,
         cities: dict[int, tuple[int, int]],
-        populationSize: int = 100,
-        crossoverRate: float = 0.7,
-        mutationRate: float = 0.3,
-        numOfGenerations: int = 100,
+        populationSize: int = 150,
+        crossoverRate: float = 0.75,
+        mutationRate: float = 0.05,
+        maxMutationStrength: int | None = None,
+        numOfGenerations: int = 300,
     ):
         self.cities: dict[int, tuple[int, int]] = cities
         self.populationSize: int = populationSize
         self.crossoverRate: float = crossoverRate
         self.mutationRate: float = mutationRate
+        self.maxMutationStrength: int = (
+            maxMutationStrength if maxMutationStrength else len(cities) - 1
+        )
         self.numOfGenerations: int = numOfGenerations
         self.community: list[Candidate] = []
         for i in range(self.populationSize):
@@ -55,16 +59,16 @@ class GA:
         while self.iteration <= self.numOfGenerations:
             # print verbose
             if verbose:
-                theText=[]
-                theText+=["-" * 50]
+                theText = []
+                theText += ["-" * 50]
                 # print iteration
-                theText+=[f"Iteration {self.iteration}"]
+                theText += [f"Iteration {self.iteration}"]
                 # print current best solution
-                theText+=[f"Best solution: {self.community[0]['path']}"]
+                theText += [f"Best solution: {self.community[0]['path']}"]
                 # print current best distance
-                theText+=[f"Best distance: {self.community[0]['dist']}"]
-                theText+=["-" * 50]
-                print('\n'.join(theText))
+                theText += [f"Best distance: {self.community[0]['dist']}"]
+                theText += ["-" * 50]
+                print("\n".join(theText))
             pass
             # generate new solution
             newCommunity: list[Candidate] = []
@@ -185,14 +189,20 @@ class GA:
     pass
 
     def mutation(self, solution: list[int]) -> list[int]:
+        """mutation function"""
         newSolution: list[int] = solution.copy()
-        # 1 to len(solution) cuz must start with the first city (city 1), so won't shuffle first city
-        mutationStrength: int = random.randint(1, 3)
-        startIndex: int = random.randint(1, (len(newSolution) - 1) - mutationStrength)
-        endIndex: int = startIndex + mutationStrength
-        newSolution[startIndex : endIndex + 1] = random.sample(
-            newSolution[startIndex : endIndex + 1], mutationStrength + 1
-        )
+
+        # keep the first city as 1, and mutate the rest
+        mutationStrength = random.randint(
+            1, self.maxMutationStrength - 1
+        )  # mutationStrength: 1~maxMutationStrength
+        startIndex = random.randint(1, len(newSolution) - mutationStrength - 1)
+        endIndex = startIndex + mutationStrength
+
+        # suffle the segment
+        segment = newSolution[startIndex : endIndex + 1]
+        newSolution[startIndex : endIndex + 1] = random.sample(segment, len(segment))
+
         return newSolution
 
     pass
@@ -256,9 +266,9 @@ if __name__ == "__main__":
         20: (60, 30),
     }
     # Create a list of City objects
-    ga = GA(listOfCities)
+    ga = GA(listOfCities, maxMutationStrength=5)
     startTime: datetime = datetime.now()
-    ga.run(True)
+    ga.run(False)
     runTime: timedelta = datetime.now() - startTime
     finalDistance: int = ga.getDistance()
     finalSolution: list[int] = ga.getSolution()
