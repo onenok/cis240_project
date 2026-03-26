@@ -22,11 +22,11 @@ class GA:
     def __init__(
         self,
         cities: dict[int, tuple[int, int]],
-        populationSize: int = 150,
+        populationSize: int = 175,
         crossoverRate: float = 0.75,
         mutationRate: float = 0.05,
         maxMutationStrength: int | None = None,
-        numOfGenerations: int = 300,
+        numOfGenerations: int = 500,
     ):
         self.cities: dict[int, tuple[int, int]] = cities
         self.populationSize: int = populationSize
