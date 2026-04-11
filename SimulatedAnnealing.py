@@ -4,6 +4,8 @@ import math
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+from exceptiongroup import catch
+
 random.seed(42)
 
 
@@ -13,22 +15,25 @@ class SA:
         self,
         cities: dict[int, tuple[int, int]],
         initialTemp: int = 10000,
-        coolingRate: float = 0.9995,
-        maxIterations: int = 99,
+        coolingRate: float = 0.995,
+        maxIterations: int = 10000,
+        maxNoChangeIterations: int = 2000,
     ):
         self.cities: dict[int, tuple[int, int]] = cities
         self.temp: float = initialTemp
         self.coolingRate: float = coolingRate
         self.maxIterations: int = maxIterations
+        self.maxNoChangeIterations: int = maxNoChangeIterations
         self.solution: list[int] = [1] + random.sample(
             list(range(2, len(cities) + 1)), len(cities) - 1
         )
-        self.distance: int = self.calculateTotalDistance(self.solution)
-        self.bestDistance: int = self.distance
+        self.distance: float = self.calculateTotalDistance(self.solution)
+        self.bestDistance: float = self.distance
         self.bestSolution: list[int] = self.solution
         self.iteration: int = 1
+        self.noChangeIterations: int = 1
         self.historySolutions: list[list[int]] = [self.solution]
-        self.historyDistances: list[int] = [self.distance]
+        self.historyDistances: list[float] = [self.distance]
         pass
 
     def run(self, verbose: bool = False) -> None:
@@ -46,19 +51,28 @@ class SA:
             print("-" * 50)
             pass
         # run algorithm
-        while self.iteration < self.maxIterations and self.temp > 0:
+        while self.iteration < self.maxIterations and self.temp > 0 and self.noChangeIterations < self.maxNoChangeIterations:
             # generate new solution
-            newSoultion: list[int] = self.shuffle(self.solution)
-            newDistance: int = self.calculateTotalDistance(newSoultion)
-            X: float = random.random()
-            deltaD: int = newDistance - self.distance
-            y: float = 1 if deltaD < 0 else 1 / math.exp(deltaD / self.temp)
+            newSoultion = self.shuffle(self.solution)
+            newDistance = self.calculateTotalDistance(newSoultion)
+            X = random.random()
+            deltaD = newDistance - self.distance
+            try:
+                y = 1 if deltaD < 0 else 1 / math.exp(min(700,deltaD / self.temp)) # min() for avoid OverflowError: math range error
+            except OverflowError:
+                print(f"newDistance: {newDistance}, self.distance: {self.distance}, deltaD: {deltaD}, self.temp: {self.temp}")
+                quit()
+            pass
             # if X < y, accept new solution
-            if not(X < y): continue # reject new solution
+            if not(X < y):
+                self.noChangeIterations += 1
+                continue # reject new solution
+            pass
+            self.noChangeIterations = 0
             # accept new solution
-            self.solution: list[int] = newSoultion
-            self.distance: int = newDistance
-            self.temp: float = self.temp * self.coolingRate
+            self.solution = newSoultion
+            self.distance = newDistance
+            self.temp = self.temp * self.coolingRate
             self.iteration += 1
             # print verbose
             if verbose:
@@ -76,8 +90,8 @@ class SA:
                 self.historySolutions.append(self.solution)
                 pass
             if newDistance < self.bestDistance:
-                self.bestDistance: int = newDistance
-                self.bestSolution: list[int] = newSoultion
+                self.bestDistance = newDistance
+                self.bestSolution = newSoultion
                 pass
             pass
         if verbose:
@@ -105,17 +119,17 @@ class SA:
     def getSolution(self) -> list[int]:
         return self.solution
 
-    def getDistance(self) -> int:
+    def getDistance(self) -> float:
         return self.distance
 
     def getBestSolution(self) -> list[int]:
         return self.bestSolution
 
-    def getBestDistance(self) -> int:
+    def getBestDistance(self) -> float:
         return self.bestDistance
 
-    def calculateTotalDistance(self, solution: list[int]) -> int:
-        def getdist(a: int, b: int) -> int:
+    def calculateTotalDistance(self, solution: list[int]) -> float:
+        def getdist(a: int, b: int) -> float:
             aCoord: tuple[int, int] = self.cities[a]
             bCoord: tuple[int, int] = self.cities[b]
             distBetweenTwoCities: int = (
@@ -123,10 +137,10 @@ class SA:
             ) ** 0.5
             return distBetweenTwoCities
 
-        distList: list[int] = [
+        distList: list[float] = [
             getdist(x, y) for x, y in zip(solution, solution[1:] + [solution[0]])
         ]
-        dist: int = sum(distList)
+        dist: float = sum(distList)
         return dist
 
 
@@ -156,14 +170,14 @@ if __name__ == "__main__":
         20: (60, 30),
     }
     # Create a list of City objects
-    sa = SA(listOfCities, 10000, 0.9300, 99)
+    sa = SA(listOfCities, 10000, 0.995, 10000, 2000)
     startTime = datetime.now()
     sa.run(False)
     runTime = datetime.now() - startTime
-    finalDistance: int = sa.getDistance()
-    finalSolution: list[int] = sa.getSolution()
-    bestDistance: int = sa.getBestDistance()
-    bestSolution: list[int] = sa.getBestSolution()
+    finalDistance = sa.getDistance()
+    finalSolution = sa.getSolution()
+    bestDistance = sa.getBestDistance()
+    bestSolution = sa.getBestSolution()
     print("")
     print(finalDistance)
     print(finalSolution)
@@ -171,9 +185,5 @@ if __name__ == "__main__":
     print(runTime)
     print(bestDistance)
     print(bestSolution)
-    print("")
-    print("Quality of the solution (how close it is to the optimal solution): ")
-    print(finalDistance / bestDistance)
-    print(finalDistance - bestDistance)
     pass
     # end of main function

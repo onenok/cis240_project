@@ -283,7 +283,4 @@ if __name__ == "__main__":
     print(finalSolution)
     print("")
     print(runTime)
-    print("")
-    print("Quality of the solution (how close it is to the optimal solution): ")
-    print("This Algorithm will keep the best solution it found.")
 pass

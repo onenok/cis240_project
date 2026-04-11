@@ -12,7 +12,7 @@ random.seed(42)
 # Genetic Algorithm
 class Candidate(TypedDict):
     path: list[int]
-    dist: int
+    dist: float
 
 
 pass
@@ -22,7 +22,7 @@ class GA:
     def __init__(
         self,
         cities: dict[int, tuple[int, int]],
-        populationSize: int = 175,
+        populationSize: int = 200,
         crossoverRate: float = 0.75,
         mutationRate: float = 0.05,
         maxMutationStrength: int | None = None,
@@ -47,9 +47,9 @@ class GA:
         pass
         self.community.sort(key=lambda x: x["dist"])
         self.iteration: int = 0
-        self.bestDistance: int = self.community[0]["dist"]
+        self.bestDistance: float = self.community[0]["dist"]
         self.bestSolution: list[int] = self.community[0]["path"]
-        self.historyDistances: list[int] = [self.bestDistance]
+        self.historyDistances: list[float] = [self.bestDistance]
         self.historySolutions: list[list[int]] = [self.bestSolution]
 
     pass
@@ -207,18 +207,18 @@ class GA:
 
     pass
 
-    def getSolution(self) -> list[int]:
+    def getBestSolution(self) -> list[int]:
         return self.community[0]["path"]
 
     pass
 
-    def getDistance(self) -> int:
+    def getBestDistance(self) -> float:
         return self.community[0]["dist"]
 
     pass
 
-    def calculateTotalDistance(self, solution: list[int]) -> int:
-        def getdist(a: int, b: int) -> int:
+    def calculateTotalDistance(self, solution: list[int]) -> float:
+        def getdist(a: int, b: int) -> float:
             aCoord: tuple[int, int] = self.cities[a]
             bCoord: tuple[int, int] = self.cities[b]
             distBetweenTwoCities: int = (
@@ -228,10 +228,10 @@ class GA:
 
         pass
 
-        distList: list[int] = [
+        distList: list[float] = [
             getdist(x, y) for x, y in zip(solution, solution[1:] + [solution[0]])
         ]
-        dist: int = sum(distList)
+        dist: float = sum(distList)
         return dist
 
     pass
@@ -266,12 +266,12 @@ if __name__ == "__main__":
         20: (60, 30),
     }
     # Create a list of City objects
-    ga = GA(listOfCities, maxMutationStrength=5)
+    ga = GA(listOfCities, 200, 0.6, 0.03, 2, 100)
     startTime: datetime = datetime.now()
     ga.run(False)
     runTime: timedelta = datetime.now() - startTime
-    finalDistance: int = ga.getDistance()
-    finalSolution: list[int] = ga.getSolution()
+    finalDistance = ga.getBestDistance()
+    finalSolution = ga.getBestSolution()
     print("")
     print(finalDistance)
     print(finalSolution)
