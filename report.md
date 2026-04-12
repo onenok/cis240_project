@@ -26,16 +26,18 @@ In this project, I'll implement two different algorithms to solve TSP, algorithm
   * **SA Implementation**:
     1. Initialization:\
     The algorithm begins by generating an initial random solution (a valid tour starting with City 1). It calculates the total Euclidean distance of this tour and sets the starting temperature ($T$) and a cooling rate ($\alpha$).
-    2. Neighbor Discovery (Shuffling):\
-    In each step, the algorithm explores the "neighborhood" of the current solution. It uses a Swap Mutation (the shuffle method) to randomly pick two cities (excluding the first) and swap their positions.
+    2. Neighbor Exploration (Shuffling):\
+    In each step, the algorithm explores the "neighborhood" of the current solution. It uses a "Swap Mutation" (the shuffle method) to randomly pick two cities (excluding the first) and swap their positions.
     3. The Metropolis Criterion (Acceptance Logic):\
-    This is the core of SA. The algorithm decides whether to move to the new neighbor based on the following rules:
-       * Better Solution: If the new distance is shorter ($\Delta D < 0$), the move is always accepted.
-       * Worse Solution: If the new distance is longer ($\Delta D > 0$), the move is accepted with a probability $P = e^{-\frac{\Delta D}{T}}$. This allows the algorithm to occasionally accept "bad" moves to escape local optima (dead ends).
-    4. Cooling Schedule:\
-    After an accepted move, the temperature is multiplied by the cooling rate ($T = T \times \alpha$). As the temperature decreases, the probability of accepting worse solutions drops, causing the algorithm to focus more on fine-tuning the best path it has found.
-    5. Termination:\
-    The process repeats until the maxIterations limit is reached or the temperature effectively reaches zero. The algorithm ensures the globally bestSolution found during the entire search is preserved.
+    This part handles how the algorithm moves. It follows these rules:
+        * Better Solution: If the new path is shorter ($\Delta D < 0$), the move is always accepted.
+        * Worse Solution: If the new distance is longer ($\Delta D > 0$), the move is accepted with a probability $P = e^{-\frac{\Delta D}{T}}$. It lets the algorithm take a "bad" move sometimes so it doesn't get stuck in a local optimum.
+
+    4. Cooling Schedule:
+    Every time a move is accepted, the temperature is updated using $T = T \times \alpha$. As $T$ gets lower, the chance of accepting worse solutions also decreases. This forces the algorithm to stop exploring eventually and focus on narrowing down the best path.
+
+    5. Termination:
+    The loop keeps running until it hits the maxIterations limit, the temperature gets close to zero or the move rejected more than maxNoChangeIterations times continuously. The program tracks and saves the bestSolution found across all iterations.
 
   * **GA Implementation**:
     1. Initialization (Population):\
@@ -68,7 +70,7 @@ In this project, I'll implement two different algorithms to solve TSP, algorithm
   * **The Challenge**:\
   At first, I underestimated the complexity of a 20-city problem, attempting to solve it with low iteration counts (e.g., 99 iterations). However, a mathematical analysis revealed that with a fixed starting city, the search space consists of $(n-1)! = 19!$ possible routes. This equals approximately **121 quadrillion** patterns ($1.21 \times 10^{17}$), a scale where exhaustive search is computationally impossible.
   * **Technical Solution**:\
-  Realizing I was facing the **"Curse of Dimensionality,"** I adjusted the "computational budget." For Simulated Annealing, I increased the iteration limit and slowed the cooling rate ($\alpha$) to allow for more exploration. For the Genetic Algorithm, I expanded the population size to 200 and the generation limit to 500. This allowed the algorithms to sample a statistically significant portion of the search space, moving from random noise toward a near-optimal convergence.
+  Realizing I was facing the complexity (**"Curse of Dimensionality"**), I adjusted the "computational budget." For Simulated Annealing, I increased the iteration limit and slowed the cooling rate ($\alpha$) to allow for more exploration. For the Genetic Algorithm, I increased the population to 200 and set the generation limit to 500. This gave the GA more "individuals" to work with over more time, helping it move past random paths and find a much better, stable solution.
 
 ---
 
@@ -100,11 +102,13 @@ repeat until the maxIterations limit is reached or the temperature effectively r
 
 ## 4. Analysis and Discussion
 
-### 4.1 **Parameter Sensitivity**
-  
+### 4.1 **Automated Sensitivity Testing Data**
+
+  To evaluate the performance of SA and GA, I developed a script to automatically test different parameters. The following tables show the results of these tests. Instead of using arbitrary numbers, I used Deviations from a fixed Baseline value to observe how sensitive the algorithms are to specific changes.
+
 * *SA SENSITIVITY: DEVIATION FROM BASELINE*
   
-  --- Testing Deviation of initialTemp (Baseline: 10000) ---
+  --- Testing Deviation of ***initialTemp*** (Baseline: 10000) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -114,7 +118,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +10000     | 20000    | 369.80        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 1390.7904     |
   | +40000     | 50000    | 385.94        | 376.87        | [1, 2, 14, 4, 18, 12, 9, 17, 7, 20, 5, 13, 8, 15, 6, 11, 10, 16, 19, 3] | 1083.4764     |
 
-  --- Testing Deviation of coolingRate (Baseline: 0.995) ---
+  --- Testing Deviation of ***coolingRate*** (Baseline: 0.995) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -123,7 +127,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | BASELINE   | 0.995    | 378.22        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 876.7494      |
   | +0.004     | 0.999    | 362.72        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 4029.5042     |
 
-  --- Testing Deviation of maxIterations (Baseline: 10000) ---
+  --- Testing Deviation of ***maxIterations*** (Baseline: 10000) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -133,7 +137,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +5000      | 15000    | 378.22        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 870.7910      |
   | +10000     | 20000    | 378.22        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 865.4188      |
 
-  --- Testing Deviation of maxNoChangeIterations (Baseline: 2000) ---
+  --- Testing Deviation of ***maxNoChangeIterations*** (Baseline: 2000) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -145,7 +149,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
 
 * *GA SENSITIVITY: DEVIATION FROM BASELINE*
 
-  --- Testing Deviation of populationSize (Baseline: 200) ---
+  --- Testing Deviation of ***populationSize*** (Baseline: 200) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -155,7 +159,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +100       | 300      | 353.95        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 2715.3605     |
   | +200       | 400      | 359.00        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 4761.6318     |
 
-  --- Testing Deviation of crossoverRate (Baseline: 0.6) ---
+  --- Testing Deviation of ***crossoverRate*** (Baseline: 0.6) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -165,7 +169,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +0.15      | 0.75     | 364.05        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 1639.5375     |
   | +0.24      | 0.84     | 361.34        | 348.20        | [1, 18, 4, 12, 9, 17, 7, 20, 5, 13, 8, 15, 6, 11, 10, 16, 19, 3, 14, 2] | 1799.5102     |
 
-  --- Testing Deviation of mutationRate (Baseline: 0.03) ---
+  --- Testing Deviation of ***mutationRate*** (Baseline: 0.03) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -175,7 +179,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +0.1       | 0.13     | 359.97        | 348.20        | [1, 18, 4, 12, 9, 17, 7, 20, 5, 13, 8, 15, 6, 11, 10, 16, 19, 3, 14, 2] | 1281.3776     |
   | +0.4       | 0.43     | 361.43        | 348.20        | [1, 18, 4, 12, 9, 17, 7, 20, 5, 13, 8, 15, 6, 11, 10, 16, 19, 3, 14, 2] | 1373.5516     |
 
-  --- Testing Deviation of maxMutationStrength (Baseline: 2) ---
+  --- Testing Deviation of ***maxMutationStrength*** (Baseline: 2) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -185,7 +189,7 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +5         | 7        | 363.38        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 1292.4611     |
   | +13        | 15       | 367.62        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 1383.7670     |
 
-  --- Testing Deviation of numOfGenerations (Baseline: 100) ---
+  --- Testing Deviation of ***numOfGenerations*** (Baseline: 100) ---
 
   | Deviation  | Value    | Avg Dist      | Best Dist     | Best Path                                                               | Avg Time      |
   | ---------- | -------- | ------------- | ------------- | ----------------------------------------------------------------------- | ------------- |
@@ -195,25 +199,29 @@ repeat until the maxIterations limit is reached or the temperature effectively r
   | +500       | 600      | 368.33        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 7326.5172     |
   | +1000      | 1100     | 368.33        | 348.20        | [1, 2, 14, 3, 19, 16, 10, 11, 6, 15, 8, 13, 5, 20, 7, 17, 9, 12, 4, 18] | 13568.7549    |
 
-### 4.2 Parameter Sensitivity: Deviation from Baseline
+### 4.2 Parameter Sensitivity Analysis
 
-The following analysis examines how each algorithm reacts to changes in its core parameters.
+In this section, I will analyze the data from the tables above to understand how each parameter affects the search for solving the TSP.
 
-#### Simulated Annealing (SA) Insights
+#### **Simulated Annealing (SA) Observations**
 
-* **Cooling Rate Sensitivity**: This is the most critical factor for convergence. Reducing the rate to 0.9 (a -0.095 deviation) caused the average distance to jump to 446.02, as the algorithm "quenched" too quickly and got stuck. Increasing it to 0.999 improved the average distance to 362.72 but increased execution time by nearly 4.5x, demonstrating a clear trade-off between precision and computational cost.
-* **Convergence via maxNoChangeIterations**: The baseline of 2000 iterations without change proved to be a "sweet spot." Lowering it significantly (to 100) led to premature termination with a poor distance of 419.13, while increasing it beyond 2000 yielded no further improvements in distance, only increasing the runtime.
-* **Temperature Robustness**: SA showed high resilience to the `initialTemp`. Values ranging from 5,000 to 20,000 all converged to similar average results, suggesting the baseline of 10,000 is well-chosen for a 20-city problem.
+* **The Importance of Cooling Rate**: Based on the tests, `coolingRate` is the most critical factor. When reduced it to 0.9 (a -0.095 deviation), the average distance was very poor (446.02) because the algorithm stopped searching too quickly. However, setting it to 0.999 little improved the result but made the program run 4 times longer, not worth.
 
-#### Genetic Algorithm (GA) Insights
+* **Stop Criteria (maxNoChangeIterations)**: The baseline of 2000 is a good "sweet spot." Lowering it to 100 caused the program to quit too early, but increasing it to 10000 didn't make the distance any better; it only increased the runtime.
 
-* **Population Size & Quality**: Increasing the population from 50 to 300 dropped the average distance from 440.10 to 353.95. However, at a population of 400, the performance plateaued and slightly regressed (359.00), suggesting that without a proportional increase in generations, a massive population may lead to incomplete evolution.
-* **The Power of Crossover**: A low crossover rate (0.15) crippled the GA’s search capability (Avg Dist: 480.05). The algorithm reached peak efficiency at rates between 0.6 and 0.84, confirming that the recombination of genes is the primary driver of optimization in this TSP implementation.
-* **Evolutionary Limits**: The data for `numOfGenerations` shows that the population reached near-total homogeneity around the 600th generation. Increasing the limit to 1100 did not change the average distance (remaining at 368.33), but doubled the execution time.
+* **Temperature Stability**: SA is quite robust regarding `initialTemp`. Whether I used 1000 or 20000, the final results were very similar, which means the algorithm is not very sensitive to the starting temperature.
+
+#### **Genetic Algorithm (GA) Observations**
+
+* **Population Quality**: The data shows that a larger population usually finds better results. Increasing it to 300 helped find a much better average distance. However, start at 400, the performance didn't get any better but worse, probably because the generation limit was too low to let such a big group evolve properly, but if we push up the generation limit, it will cost a lot of computing power, which is not cost-effective.
+
+* **Crossover & Mutation**: Crossover is the major of the GA. low crossover rate (0.15) will mess up algorithm, and get bad results (480.05). For mutation, even small rates were enough to help the algorithm jump out of local minimums and keep searching.
+
+* **Evolutionary Limits**: The population seems to hit a limit around <600 generations. Pushing it to more will doubled the time but didn't improve the distance at all, so it ended up just wasting CPU.
 
 ### 4.3 Empirical Comparison
 
-In this 20-city case, **Simulated Annealing (SA) proved to be the more efficient and balanced choice.** While both algorithms were capable of finding the global optimum (348.20), SA achieved an average best distance of 378.22 in less than **1 second** (934ms). In contrast, the Genetic Algorithm required nearly **10 seconds** (9940ms) to reach an average of 359.55. Although GA is statistically "more robust" at finding slightly better average paths across multiple runs, the order-of-magnitude difference in time complexity makes SA far more attractive for problems of this specific scale.
+Comparing these two algorithms, **Simulated Annealing (SA) is slightly more efficient for this 20-city TSP.** While both algorithms found the same best distance of 348.20, SA finished in about **0.9 second**, and GA took around **1.3 seconds**. For a problem of this scale, they are both great, but if I have to choose one, SA is the better choice because it reaches the same high-quality results a bit faster and with less setup.
 
 ---
 
@@ -237,7 +245,4 @@ In this 20-city case, **Simulated Annealing (SA) proved to be the more efficient
 ## 6. Conclusion
 
 * **Summary**:
-This project successfully demonstrated that both Simulated Annealing and Genetic Algorithms can effectively navigate the $(n-1)!$ combinatorial explosion of the Traveling Salesman Problem. Starting from random initial paths with distances often exceeding 1000, both heuristics successfully optimized the routes down to the global minimum of 348.20. While GA offers a more comprehensive search through population diversity, SA provides a remarkably fast and lightweight alternative that is highly effective when the cooling schedule is properly tuned.
-
-* **Final Insights**:
-Implementing these algorithms highlighted the reality of solving NP-hard problems: there is no "perfect" setting, only a series of trade-offs. The sensitivity analysis revealed that heuristic performance is not linear; small changes in parameters like the `coolingRate` or `crossoverRate` can lead to disproportionate failures or successes. Ultimately, understanding the mathematical constraints of the search space allowed for the transition from "random noise" to a sophisticated, near-optimal solution, providing a practical foundation for tackling complex optimization tasks in real-world scenarios.
+This project showed that both `SA` and `GA` can solve the TSP effectively. Starting from random, long-distance initial paths, both methods successfully optimized the routes down to the same best result. While `GA` is better at exploring different areas due to its population-based approach, `SA` is a faster, simpler alternative that performs just as well if the cooling parameters are tuned correctly.
